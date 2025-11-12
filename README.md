@@ -2,7 +2,7 @@
 
 Aplicación web desarrollada en Django que permite a community managers gestionar comentarios de Reddit y YouTube, generando respuestas automáticas con IA y publicándolas directamente en las plataformas.
 
-- Python 3.8 o superior
+- Python 
 - Ollama instalado (Abajo se explica el paso a paso para la instalación y verirficación)
   
 
