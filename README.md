@@ -55,6 +55,7 @@ python manage.py migrate
 ```bash
 python manage.py createsuperuser
 ```
+### Correr el server
 
 
 ## 🛠️ Tecnologías
