@@ -1,0 +1,381 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Crear Post - Reddit Manager{% endblock %}
+
+{% block content %}
+<div class="create-post-view">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+        <a href="{% url 'reddit_manager' %}">← Volver a Posts</a>
+    </nav>
+
+    <!-- Header -->
+    <div class="view-header">
+        <div>
+            <h2 class="view-title">📝 Crear Nuevo Post</h2>
+            <p class="view-subtitle">Publica directamente en r/ACM_Magneto</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'generate_job_post' %}" class="btn btn-secondary">
+                <span>✨</span> Generar con IA
+            </a>
+        </div>
+    </div>
+
+    <!-- Formulario -->
+    <div class="create-post-form-container">
+        <form method="post" id="createPostForm" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="form-section">
+                <label class="form-label">{{ form.title.label }}</label>
+                {{ form.title }}
+                {% if form.title.errors %}
+                    <div class="form-error">{{ form.title.errors }}</div>
+                {% endif %}
+                <div class="form-hint">Un buen título es claro y descriptivo (máx. 300 caracteres)</div>
+            </div>
+
+            <div class="form-section">
+                <label class="form-label">{{ form.post_type.label }}</label>
+                <div class="radio-group">
+                    {% for radio in form.post_type %}
+                        <label class="radio-option">
+                            {{ radio.tag }}
+                            <span class="radio-label">{{ radio.choice_label }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+                {% if form.post_type.errors %}
+                    <div class="form-error">{{ form.post_type.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-section" id="contentSection">
+                <label class="form-label">{{ form.content.label }}</label>
+                {{ form.content }}
+                {% if form.content.errors %}
+                    <div class="form-error">{{ form.content.errors }}</div>
+                {% endif %}
+                <div class="form-hint" id="contentHint">
+                    Escribe el contenido de tu post
+                </div>
+            </div>
+
+            <div class="form-section" id="imageSection" style="display: none;">
+                <label class="form-label">{{ form.image.label }}</label>
+                <div class="file-input-wrapper">
+                    {{ form.image }}
+                    <div class="file-input-display" id="fileDisplay">
+                        <span class="file-icon">📷</span>
+                        <span class="file-text">Haz clic o arrastra una imagen aquí</span>
+                    </div>
+                </div>
+                {% if form.image.errors %}
+                    <div class="form-error">{{ form.image.errors }}</div>
+                {% endif %}
+                <div class="form-hint">Formatos aceptados: JPG, PNG, GIF (máx. 20MB)</div>
+                <div id="imagePreview" class="image-preview"></div>
+            </div>
+
+            <div class="form-section">
+                <label class="form-label">{{ form.subreddit.label }}</label>
+                {{ form.subreddit }}
+            </div>
+
+            <div class="form-actions">
+                <button type="button" onclick="previewPost()" class="btn btn-outline">
+                    <span>👁️</span> Vista Previa
+                </button>
+                <button type="submit" class="btn btn-primary" id="submitBtn">
+                    <span>🚀</span> Publicar Post
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Preview Section -->
+    <div id="previewSection" class="preview-section" style="display: none;">
+        <h3 class="section-title">👁️ Vista Previa</h3>
+        <div class="preview-card">
+            <h4 id="previewTitle" class="preview-title"></h4>
+            <div id="previewImage" class="preview-image"></div>
+            <div id="previewContent" class="preview-content"></div>
+            <div class="preview-meta">
+                <span class="meta-item">📅 Ahora</span>
+                <span class="meta-item">👤 {{ user.username }}</span>
+                <span class="meta-item">📍 r/ACM_Magneto</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.create-post-form-container {
+    background: var(--color-blanco);
+    border-radius: 16px;
+    padding: 2.5rem;
+    box-shadow: var(--shadow-lg);
+    margin-bottom: 2rem;
+}
+
+.form-section {
+    margin-bottom: 2rem;
+}
+
+.form-label {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-azul-oscuro);
+    margin-bottom: 0.75rem;
+}
+
+.form-input,
+.form-textarea,
+.form-select {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid var(--color-gris-claro);
+    border-radius: 10px;
+    font-size: 1rem;
+    font-family: inherit;
+    transition: all 0.3s ease;
+}
+
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus {
+    outline: none;
+    border-color: var(--color-azul-acento);
+    box-shadow: 0 0 0 4px rgba(30, 27, 75, 0.1);
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 200px;
+    line-height: 1.6;
+}
+
+.form-hint {
+    font-size: 0.875rem;
+    color: var(--color-gris-medio);
+    margin-top: 0.5rem;
+}
+
+.form-error {
+    color: var(--color-error);
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    font-weight: 600;
+}
+
+.radio-group {
+    display: flex;
+    gap: 2rem;
+    padding: 1rem;
+    background: var(--color-gris-claro);
+    border-radius: 10px;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--color-azul-oscuro);
+}
+
+.radio-option input[type="radio"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.file-input-wrapper {
+    position: relative;
+}
+
+.file-input-wrapper input[type="file"] {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.file-input-display {
+    padding: 3rem 2rem;
+    border: 3px dashed var(--color-gris-medio);
+    border-radius: 12px;
+    text-align: center;
+    background: var(--color-gris-claro);
+    transition: all 0.3s ease;
+}
+
+.file-input-display:hover {
+    border-color: var(--color-azul-acento);
+    background: var(--color-azul-pastel);
+}
+
+.file-icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.file-text {
+    color: var(--color-gris-medio);
+    font-weight: 600;
+}
+
+.image-preview {
+    margin-top: 1rem;
+    text-align: center;
+}
+
+.image-preview img {
+    max-width: 100%;
+    max-height: 400px;
+    border-radius: 12px;
+    box-shadow: var(--shadow-md);
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    padding-top: 2rem;
+    border-top: 2px solid var(--color-gris-claro);
+}
+
+.preview-section {
+    background: var(--color-blanco);
+    border-radius: 16px;
+    padding: 2.5rem;
+    box-shadow: var(--shadow-lg);
+}
+
+.preview-card {
+    background: var(--color-gris-claro);
+    border-radius: 12px;
+    padding: 2rem;
+    border-left: 4px solid var(--color-verde-principal);
+}
+
+.preview-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--color-azul-oscuro);
+    margin-bottom: 1rem;
+}
+
+.preview-image {
+    margin-bottom: 1rem;
+}
+
+.preview-image img {
+    max-width: 100%;
+    border-radius: 8px;
+}
+
+.preview-content {
+    color: var(--color-azul-oscuro);
+    line-height: 1.8;
+    margin-bottom: 1.5rem;
+    white-space: pre-wrap;
+}
+
+.preview-meta {
+    display: flex;
+    gap: 1.5rem;
+    padding-top: 1rem;
+    border-top: 2px solid var(--color-blanco);
+}
+</style>
+
+<script>
+// Cambiar UI según tipo de post
+document.querySelectorAll('input[name="post_type"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        const contentSection = document.getElementById('contentSection');
+        const imageSection = document.getElementById('imageSection');
+        const hint = document.getElementById('contentHint');
+        const textarea = document.querySelector('textarea[name="content"]');
+        
+        if (this.value === 'link') {
+            contentSection.style.display = 'block';
+            imageSection.style.display = 'none';
+            hint.textContent = 'Pega aquí la URL del enlace que quieres compartir';
+            textarea.placeholder = 'https://ejemplo.com/articulo';
+            textarea.required = true;
+        } else if (this.value === 'image') {
+            contentSection.style.display = 'block';
+            imageSection.style.display = 'block';
+            hint.textContent = 'Descripción opcional de la imagen';
+            textarea.placeholder = 'Descripción de la imagen (opcional)';
+            textarea.required = false;
+        } else {
+            contentSection.style.display = 'block';
+            imageSection.style.display = 'none';
+            hint.textContent = 'Escribe el contenido de tu post';
+            textarea.placeholder = 'Contenido del post...';
+            textarea.required = true;
+        }
+    });
+});
+
+// Preview de imagen
+document.querySelector('input[type="file"]').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        document.querySelector('.file-text').textContent = file.name;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('imagePreview');
+            preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Vista previa
+function previewPost() {
+    const title = document.querySelector('input[name="title"]').value;
+    const content = document.querySelector('textarea[name="content"]').value;
+    const postType = document.querySelector('input[name="post_type"]:checked').value;
+    
+    if (!title) {
+        showMessage('⚠️ Ingresa un título para ver la vista previa', 'warning');
+        return;
+    }
+    
+    document.getElementById('previewTitle').textContent = title;
+    
+    if (postType === 'link' && content) {
+        document.getElementById('previewContent').innerHTML = `🔗 <a href="${content}" target="_blank">${content}</a>`;
+        document.getElementById('previewImage').innerHTML = '';
+    } else if (postType === 'image') {
+        const imagePreview = document.querySelector('#imagePreview img');
+        if (imagePreview) {
+            document.getElementById('previewImage').innerHTML = `<img src="${imagePreview.src}" alt="Preview">`;
+        }
+        document.getElementById('previewContent').textContent = content || '(Sin descripción)';
+    } else {
+        document.getElementById('previewContent').textContent = content;
+        document.getElementById('previewImage').innerHTML = '';
+    }
+    
+    document.getElementById('previewSection').style.display = 'block';
+    document.getElementById('previewSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+// Submit form
+document.getElementById('createPostForm').addEventListener('submit', function(e) {
+    const btn = document.getElementById('submitBtn');
+    showLoading(btn);
+});
+</script>
+{% endblock %}

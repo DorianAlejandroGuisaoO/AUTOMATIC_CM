@@ -1,0 +1,278 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Responder Comentario - YouTube Manager{% endblock %}
+
+{% block content %}
+<div class="comment-detail-view">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+        <a href="{% url 'youtube_manager' %}">🎥 Videos</a> / 
+        <a href="{% url 'video_detail_yt' comment.video.video_id %}">{{ comment.video.title|truncatewords:5 }}</a> /
+        <span>💬 Comentario</span>
+    </nav>
+
+    <!-- Comment Card -->
+    <div class="comment-display-card">
+        <div class="card-header">
+            <h3>💬 Comentario Original</h3>
+            <span class="status-badge {{ comment.status_badge.class }}">
+                {{ comment.status_badge.text }}
+            </span>
+        </div>
+        <div class="comment-info">
+            <span class="info-item">
+                <strong>👤 {{ comment.author }}</strong>
+            </span>
+            <span class="info-item">
+                📅 {{ comment.published_at|date:"d/m/Y H:i" }}
+            </span>
+            {% if comment.like_count > 0 %}
+            <span class="info-item">
+                👍 {{ comment.like_count }} like{{ comment.like_count|pluralize }}
+            </span>
+            {% endif %}
+        </div>
+        <div class="comment-text">
+            {{ comment.content }}
+        </div>
+        <div class="comment-video-context">
+            <strong>Video:</strong> {{ comment.video.title }}
+        </div>
+    </div>
+
+    <!-- Response Generation -->
+    {% if not response or response.status == 'rejected' %}
+    <div class="generation-section">
+        <h3 class="section-title">✨ Generar Respuesta con IA</h3>
+        <p class="section-subtitle">Elige el tono de la respuesta que deseas generar:</p>
+        
+        <div class="tone-buttons">
+            <button onclick="generateResponse('formal')" class="btn-tone" data-tone="formal">
+                <span class="tone-icon">👔</span>
+                <span class="tone-name">Formal</span>
+                <span class="tone-desc">Profesional y educado</span>
+            </button>
+            <button onclick="generateResponse('friendly')" class="btn-tone" data-tone="friendly">
+                <span class="tone-icon">😊</span>
+                <span class="tone-name">Amigable</span>
+                <span class="tone-desc">Cercano y cálido</span>
+            </button>
+            <button onclick="generateResponse('informative')" class="btn-tone" data-tone="informative">
+                <span class="tone-icon">💡</span>
+                <span class="tone-name">Informativo</span>
+                <span class="tone-desc">Claro y preciso</span>
+            </button>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Response Display -->
+    {% if response and response.status != 'rejected' %}
+    <div class="response-section">
+        <div class="section-header">
+            <h3 class="section-title">🤖 Respuesta Generada</h3>
+            <span class="tone-badge">✨ Tono: {{ response.get_tone_display }}</span>
+        </div>
+
+        <div class="response-card">
+            <textarea 
+                id="responseText" 
+                class="response-textarea"
+                {% if response.status == 'published' %}readonly{% endif %}
+            >{{ response.final_text }}</textarea>
+            
+            <div class="response-actions">
+                {% if response.status == 'pending' %}
+                    <button onclick="updateResponse()" class="btn btn-secondary" id="updateBtn">
+                        <span>✏️</span> Guardar Edición
+                    </button>
+                    <button onclick="regenerateResponse()" class="btn btn-outline">
+                        <span>🔄</span> Regenerar
+                    </button>
+                    <button onclick="publishResponse()" class="btn btn-primary" id="publishBtn">
+                        <span>✅</span> Publicar en YouTube
+                    </button>
+                    <button onclick="rejectResponse()" class="btn btn-danger">
+                        <span>❌</span> Descartar
+                    </button>
+                {% elif response.status == 'published' %}
+                    <div class="published-info">
+                        <span class="success-icon">✅</span>
+                        <span>Publicado el {{ response.published_at|date:"d/m/Y H:i" }}</span>
+                        <a href="{{ comment.video.url }}" target="_blank" class="btn btn-outline btn-sm">
+                            <span>🔗</span> Ver en YouTube
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if response.status == 'pending' %}
+        <div class="help-text">
+            💡 <strong>Tip:</strong> Puedes editar la respuesta antes de publicarla para personalizarla
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.comment-video-context {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, var(--color-azul-pastel) 0%, #E0F2FE 100%);
+    border-radius: 8px;
+    color: var(--color-azul-oscuro);
+    font-size: 0.95rem;
+}
+
+.comment-video-context strong {
+    font-weight: 700;
+}
+</style>
+
+<script>
+const commentId = "{{ comment.comment_id }}";
+{% if response %}
+const responseId = {{ response.id }};
+{% endif %}
+
+function generateResponse(tone) {
+    const buttons = document.querySelectorAll('.btn-tone');
+    buttons.forEach(btn => btn.disabled = true);
+    
+    const activeBtn = document.querySelector(`[data-tone="${tone}"]`);
+    const icons = {'formal': '👔', 'friendly': '😊', 'informative': '💡'};
+    activeBtn.innerHTML = '<span class="spinner"></span> Generando...';
+
+    fetch(`/dashboard/youtube/comment/${commentId}/generate/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: `tone=${tone}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage('✅ Respuesta generada exitosamente', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showMessage('❌ Error al generar respuesta', 'error');
+            buttons.forEach(btn => btn.disabled = false);
+            activeBtn.innerHTML = `
+                <span class="tone-icon">${icons[tone]}</span>
+                <span class="tone-name">${tone.charAt(0).toUpperCase() + tone.slice(1)}</span>
+            `;
+        }
+    })
+    .catch(error => {
+        showMessage('❌ Error de conexión', 'error');
+        console.error('Error:', error);
+        buttons.forEach(btn => btn.disabled = false);
+    });
+}
+
+function updateResponse() {
+    const editedText = document.getElementById('responseText').value.trim();
+    
+    if (!editedText) {
+        showMessage('❌ El texto no puede estar vacío', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('updateBtn');
+    const originalText = showLoading(btn);
+
+    fetch(`/dashboard/youtube/response/${responseId}/update/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: `edited_text=${encodeURIComponent(editedText)}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage('✅ Respuesta actualizada correctamente', 'success');
+        } else {
+            showMessage('❌ Error al actualizar respuesta', 'error');
+        }
+        hideLoading(btn);
+    })
+    .catch(error => {
+        showMessage('❌ Error de conexión', 'error');
+        console.error('Error:', error);
+        hideLoading(btn);
+    });
+}
+
+function regenerateResponse() {
+    if (!confirm('¿Deseas regenerar la respuesta? Se perderán las ediciones actuales.')) {
+        return;
+    }
+    location.reload();
+}
+
+function publishResponse() {
+    if (!confirm('¿Estás seguro de publicar esta respuesta en YouTube?')) {
+        return;
+    }
+
+    const btn = document.getElementById('publishBtn');
+    const originalText = showLoading(btn);
+
+    fetch(`/dashboard/youtube/response/${responseId}/publish/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage('✅ ¡Respuesta publicada exitosamente en YouTube!', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showMessage(`❌ ${data.error || 'Error al publicar respuesta'}`, 'error');
+            hideLoading(btn);
+        }
+    })
+    .catch(error => {
+        showMessage('❌ Error de conexión', 'error');
+        console.error('Error:', error);
+        hideLoading(btn);
+    });
+}
+
+function rejectResponse() {
+    if (!confirm('¿Deseas descartar esta respuesta?')) {
+        return;
+    }
+
+    fetch(`/dashboard/youtube/response/${responseId}/reject/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage('✅ Respuesta descartada', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showMessage('❌ Error al descartar respuesta', 'error');
+        }
+    })
+    .catch(error => {
+        showMessage('❌ Error de conexión', 'error');
+        console.error('Error:', error);
+    });
+}
+</script>
+{% endblock %}

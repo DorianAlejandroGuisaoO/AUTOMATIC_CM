@@ -1,0 +1,238 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Generar Post de Empleo con IA{% endblock %}
+
+{% block content %}
+<div class="generate-job-post-view">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+        <a href="{% url 'reddit_manager' %}">Posts</a> / 
+        <a href="{% url 'create_post' %}">Crear Post</a> /
+        <span>Generar con IA</span>
+    </nav>
+
+    <!-- Header -->
+    <div class="view-header">
+        <div>
+            <h2 class="view-title">✨ Generar Post de Empleo con IA</h2>
+            <p class="view-subtitle">Completa los datos y deja que la IA genere un post atractivo</p>
+        </div>
+    </div>
+
+    <!-- Formulario -->
+    <div class="generate-form-container">
+        <form method="post" id="generateForm">
+            {% csrf_token %}
+            
+            <div class="form-row">
+                <div class="form-section">
+                    <label class="form-label">
+                        <span class="label-icon">💼</span> {{ form.job_title.label }}
+                    </label>
+                    {{ form.job_title }}
+                    {% if form.job_title.errors %}
+                        <div class="form-error">{{ form.job_title.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-section">
+                    <label class="form-label">
+                        <span class="label-icon">🏢</span> {{ form.company_name.label }}
+                    </label>
+                    {{ form.company_name }}
+                    {% if form.company_name.errors %}
+                        <div class="form-error">{{ form.company_name.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-section">
+                    <label class="form-label">
+                        <span class="label-icon">⏰</span> {{ form.job_type.label }}
+                    </label>
+                    {{ form.job_type }}
+                    {% if form.job_type.errors %}
+                        <div class="form-error">{{ form.job_type.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-section">
+                    <label class="form-label">
+                        <span class="label-icon">📍</span> {{ form.location.label }}
+                    </label>
+                    {{ form.location }}
+                    {% if form.location.errors %}
+                        <div class="form-error">{{ form.location.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-section">
+                <label class="form-label">
+                    <span class="label-icon">💰</span> {{ form.salary_range.label }}
+                </label>
+                {{ form.salary_range }}
+                {% if form.salary_range.errors %}
+                    <div class="form-error">{{ form.salary_range.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-section">
+                <label class="form-label">
+                    <span class="label-icon">📋</span> {{ form.requirements.label }}
+                </label>
+                {{ form.requirements }}
+                {% if form.requirements.errors %}
+                    <div class="form-error">{{ form.requirements.errors }}</div>
+                {% endif %}
+                <div class="form-hint">Escribe un requisito por línea, puedes usar guiones al inicio</div>
+            </div>
+
+            <div class="form-section">
+                <label class="form-label">
+                    <span class="label-icon">✨</span> {{ form.benefits.label }}
+                </label>
+                {{ form.benefits }}
+                {% if form.benefits.errors %}
+                    <div class="form-error">{{ form.benefits.errors }}</div>
+                {% endif %}
+                <div class="form-hint">Escribe un beneficio por línea, puedes usar guiones al inicio</div>
+            </div>
+
+            <div class="form-actions">
+                <a href="{% url 'create_post' %}" class="btn btn-outline">
+                    <span>←</span> Volver
+                </a>
+                <button type="button" onclick="generatePost()" class="btn btn-primary" id="generateBtn">
+                    <span>✨</span> Generar Post con IA
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Generated Content -->
+    <div id="generatedSection" class="generated-section" style="display: none;">
+        <h3 class="section-title">🎉 Post Generado</h3>
+        
+        <div class="generated-card">
+            <div class="form-section">
+                <label class="form-label">Título</label>
+                <input type="text" id="generatedTitle" class="form-input" readonly>
+            </div>
+
+            <div class="form-section">
+                <label class="form-label">Contenido</label>
+                <textarea id="generatedContent" class="form-textarea" rows="15" readonly></textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" onclick="generatePost()" class="btn btn-outline">
+                    <span>🔄</span> Regenerar
+                </button>
+                <button type="button" onclick="useGenerated()" class="btn btn-primary">
+                    <span>✅</span> Usar este Post
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.generate-form-container,
+.generated-section {
+    background: var(--color-blanco);
+    border-radius: 16px;
+    padding: 2.5rem;
+    box-shadow: var(--shadow-lg);
+    margin-bottom: 2rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.label-icon {
+    margin-right: 0.5rem;
+}
+
+.generated-card {
+    background: linear-gradient(135deg, var(--color-azul-pastel) 0%, #E0F2FE 100%);
+    border-radius: 12px;
+    padding: 2rem;
+    border-left: 4px solid var(--color-verde-principal);
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+function generatePost() {
+    const btn = document.getElementById('generateBtn');
+    const form = document.getElementById('generateForm');
+    const formData = new FormData(form);
+    
+    showLoading(btn);
+
+    fetch('{% url "generate_job_post" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('generatedTitle').value = data.title;
+            document.getElementById('generatedContent').value = data.content;
+            document.getElementById('generatedSection').style.display = 'block';
+            document.getElementById('generatedSection').scrollIntoView({ behavior: 'smooth' });
+            showMessage('✅ Post generado exitosamente', 'success');
+        } else {
+            showMessage('❌ Error al generar post: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        showMessage('❌ Error de conexión', 'error');
+        console.error('Error:', error);
+    })
+    .finally(() => {
+        hideLoading(btn);
+    });
+}
+
+function useGenerated() {
+    const title = document.getElementById('generatedTitle').value;
+    const content = document.getElementById('generatedContent').value;
+    
+    // Redirigir a create_post con los datos
+    const url = new URL('{% url "create_post" %}', window.location.origin);
+    sessionStorage.setItem('generatedTitle', title);
+    sessionStorage.setItem('generatedContent', content);
+    
+    window.location.href = url.href;
+}
+
+// En create_post.html, agregar al final del script:
+// Recuperar datos generados
+window.addEventListener('load', function() {
+    const title = sessionStorage.getItem('generatedTitle');
+    const content = sessionStorage.getItem('generatedContent');
+    
+    if (title && content) {
+        document.querySelector('input[name="title"]').value = title;
+        document.querySelector('textarea[name="content"]').value = content;
+        sessionStorage.removeItem('generatedTitle');
+        sessionStorage.removeItem('generatedContent');
+        showMessage('✅ Post generado cargado. Revisa y publica cuando estés listo', 'success');
+    }
+});
+</script>
+{% endblock %}

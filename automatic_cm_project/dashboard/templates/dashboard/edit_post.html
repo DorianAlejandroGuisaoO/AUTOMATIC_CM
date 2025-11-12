@@ -1,0 +1,68 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Editar Post - Reddit Manager{% endblock %}
+
+{% block content %}
+<div class="edit-post-view">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+        <a href="{% url 'reddit_manager' %}">Posts</a> / 
+        <a href="{% url 'post_detail' post.post_id %}">{{ post.title|truncatewords:5 }}</a> /
+        <span>Editar</span>
+    </nav>
+
+    <!-- Header -->
+    <div class="view-header">
+        <div>
+            <h2 class="view-title">✏️ Editar Post</h2>
+            <p class="view-subtitle">{{ post.title }}</p>
+        </div>
+    </div>
+
+    <!-- Formulario -->
+    <div class="edit-form-container">
+        <form method="post" id="editPostForm">
+            {% csrf_token %}
+            
+            <div class="form-section">
+                <label class="form-label">Título (no editable)</label>
+                <input type="text" class="form-input" value="{{ post.title }}" readonly>
+                <div class="form-hint">Reddit no permite editar títulos de posts</div>
+            </div>
+
+            <div class="form-section">
+                <label class="form-label">{{ form.content.label }}</label>
+                {{ form.content }}
+                {% if form.content.errors %}
+                    <div class="form-error">{{ form.content.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-actions">
+                <a href="{% url 'post_detail' post.post_id %}" class="btn btn-outline">
+                    <span>←</span> Cancelar
+                </a>
+                <button type="submit" class="btn btn-primary" id="saveBtn">
+                    <span>💾</span> Guardar Cambios
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.edit-form-container {
+    background: var(--color-blanco);
+    border-radius: 16px;
+    padding: 2.5rem;
+    box-shadow: var(--shadow-lg);
+}
+</style>
+
+<script>
+document.getElementById('editPostForm').addEventListener('submit', function(e) {
+    const btn = document.getElementById('saveBtn');
+    showLoading(btn);
+});
+</script>
+{% endblock %}

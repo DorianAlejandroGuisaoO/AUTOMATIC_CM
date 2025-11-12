@@ -1,0 +1,119 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Gestor de Reddit - Automatic CM{% endblock %}
+
+{% block content %}
+<div class="reddit-manager">
+    <!-- Header de la vista -->
+    <div class="view-header">
+        <div>
+            <h2 class="view-title">📱 Gestor de Reddit</h2>
+            <p class="view-subtitle">Subreddit: r/ACM_Magneto</p>
+        </div>
+        <div class="header-actions">
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-label">Posts</span>
+                    <span class="stat-value">{{ total_posts }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Pendientes</span>
+                    <span class="stat-value" style="color: var(--color-error);">{{ total_unread }}</span>
+                </div>
+            </div>
+            <a href="{% url 'create_post' %}" class="btn btn-secondary">
+                <span>📝</span> Crear Post
+            </a>
+            <button onclick="syncPosts()" class="btn btn-primary" id="syncBtn">
+                <span class="btn-icon">🔄</span> Sincronizar Posts
+            </button>
+        </div>
+    </div>
+
+    
+
+    <!-- Lista de Posts -->
+    <div class="posts-container">
+        {% if posts %}
+            <div class="posts-grid">
+                {% for post in posts %}
+                <div class="post-card" data-post-id="{{ post.post_id }}">
+                    <div class="post-header">
+                        <h3 class="post-title">
+                            <a href="{% url 'post_detail' post.post_id %}">
+                                {{ post.title }}
+                            </a>
+                        </h3>
+                        {% if post.unread_comments_count > 0 %}
+                        <span class="badge badge-unread">
+                            {{ post.unread_comments_count }} nuevo{{ post.unread_comments_count|pluralize }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="post-meta">
+                        <span class="meta-item">
+                            👤 {{ post.author }}
+                        </span>
+                        <span class="meta-item">
+                            📅 {{ post.created_at|date:"d/m/Y H:i" }}
+                        </span>
+                        <span class="meta-item">
+                            💬 {{ post.comments.count }} comentario{{ post.comments.count|pluralize }}
+                        </span>
+                    </div>
+
+                    <div class="post-actions">
+                        <a href="{% url 'post_detail' post.post_id %}" class="btn btn-secondary btn-sm">
+                            <span>👁️</span> Ver Comentarios
+                        </a>
+                        <a href="{{ post.permalink }}" target="_blank" class="btn btn-outline btn-sm">
+                            <span>🔗</span> Ver en Reddit
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">📭</div>
+                <h3>No hay posts sincronizados</h3>
+                <p>Haz clic en "Sincronizar Posts" para obtener los posts del subreddit r/ACM_Magneto</p>
+                <button onclick="syncPosts()" class="btn btn-primary">
+                    <span>🔄</span> Sincronizar Ahora
+                </button>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function syncPosts() {
+    const btn = document.getElementById('syncBtn');
+    const originalText = showLoading(btn);
+
+    fetch('{% url "sync_posts" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage(`✅ Se sincronizaron ${data.synced_count} posts nuevos`, 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showMessage('❌ Error al sincronizar posts', 'error');
+            hideLoading(btn);
+        }
+    })
+    .catch(error => {
+        showMessage('❌ Error de conexión', 'error');
+        console.error('Error:', error);
+        hideLoading(btn);
+    });
+}
+</script>
+{% endblock %}

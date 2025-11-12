@@ -1,0 +1,157 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}{{ post.title }} - Reddit Manager{% endblock %}
+
+{% block content %}
+<div class="post-detail-view">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+        <a href="{% url 'reddit_manager' %}">← Volver a Posts</a>
+    </nav>
+
+    <!-- Post Info -->
+    <div class="post-info-card">
+        <h2 class="post-title" style="margin-bottom: 1rem;">{{ post.title }}</h2>
+        <div class="post-meta" style="border: none; padding: 0; margin-bottom: 1.5rem;">
+            <span class="meta-item">
+                👤 {{ post.author }}
+            </span>
+            <span class="meta-item">
+                📅 {{ post.created_at|date:"d/m/Y H:i" }}
+            </span>
+            <span class="meta-item">
+                💬 {{ comments_count }} comentario{{ comments_count|pluralize }}
+            </span>
+        </div>
+        <div class="post-actions">
+            <button onclick="syncComments()" class="btn btn-primary" id="syncCommentsBtn">
+                <span>🔄</span> Sincronizar Comentarios
+            </button>
+            <a href="{{ post.permalink }}" target="_blank" class="btn btn-outline">
+                <span>🔗</span> Ver en Reddit
+            </a>
+            
+            {% if post.can_edit %}
+            <a href="{% url 'edit_post' post.post_id %}" class="btn btn-secondary">
+                <span>✏️</span> Editar Post
+            </a>
+            {% endif %}
+            
+            {% if post.can_delete %}
+            <button onclick="deletePost('{{ post.post_id }}')" class="btn btn-danger">
+                <span>🗑️</span> Eliminar Post
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Comments List -->
+    <div class="comments-section">
+        <h3 class="section-title">Comentarios</h3>
+        
+        {% if comments %}
+            <div class="comments-list">
+                {% for comment in comments %}
+                <div class="comment-card" data-comment-id="{{ comment.comment_id }}">
+                    <div class="comment-header">
+                        <div class="comment-author">
+                            <span class="author-name">{{ comment.author }}</span>
+                            <span class="comment-date">{{ comment.created_at|date:"d/m/Y H:i" }}</span>
+                        </div>
+                        <span class="status-badge {{ comment.status_badge.class }}">
+                            {{ comment.status_badge.text }}
+                        </span>
+                    </div>
+                    
+                    <div class="comment-content">
+                        {{ comment.content }}
+                    </div>
+                    
+                    <div class="comment-actions">
+                        <a href="{% url 'comment_detail' comment.comment_id %}" class="btn btn-secondary btn-sm">
+                            {% if comment.response %}
+                                <span>👁️</span> Ver Respuesta
+                            {% else %}
+                                <span>✨</span> Generar Respuesta
+                            {% endif %}
+                        </a>
+                        <a href="{{ comment.permalink }}" target="_blank" class="btn btn-outline btn-sm">
+                            <span>🔗</span> Ver en Reddit
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">💬</div>
+                <h3>No hay comentarios</h3>
+                <p>Sincroniza los comentarios de este post para verlos aquí</p>
+                <button onclick="syncComments()" class="btn btn-primary">
+                    <span>🔄</span> Sincronizar Comentarios
+                </button>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function syncComments() {
+    const btn = document.getElementById('syncCommentsBtn');
+    const originalText = showLoading(btn);
+
+    fetch('{% url "sync_comments" post.post_id %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage(`✅ Se sincronizaron ${data.synced_count} comentarios nuevos`, 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showMessage('❌ Error al sincronizar comentarios', 'error');
+            hideLoading(btn);
+        }
+    })
+    .catch(error => {
+        showMessage('❌ Error de conexión', 'error');
+        console.error('Error:', error);
+        hideLoading(btn);
+    });
+}
+</script>
+<script>
+function deletePost(postId) {
+    if (!confirm('¿Estás seguro de eliminar este post? Esta acción no se puede deshacer.')) {
+        return;
+    }
+
+    fetch(`/dashboard/reddit/post/${postId}/delete/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage('✅ Post eliminado exitosamente', 'success');
+            setTimeout(() => {
+                window.location.href = '{% url "reddit_manager" %}';
+            }, 1500);
+        } else {
+            showMessage('❌ ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        showMessage('❌ Error de conexión', 'error');
+        console.error('Error:', error);
+    });
+}
+</script>
+{% endblock %}

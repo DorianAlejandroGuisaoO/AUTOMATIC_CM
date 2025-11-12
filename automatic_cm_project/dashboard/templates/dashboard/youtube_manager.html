@@ -1,0 +1,226 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Gestor de YouTube - Automatic CM{% endblock %}
+
+{% block content %}
+<div class="youtube-manager">
+    <!-- Header de la vista -->
+    <div class="view-header">
+        <div>
+            <h2 class="view-title">🎥 Gestor de YouTube</h2>
+            <p class="view-subtitle">Gestiona comentarios de tus videos</p>
+        </div>
+        <div class="header-actions">
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-label">Videos</span>
+                    <span class="stat-value">{{ total_videos }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Pendientes</span>
+                    <span class="stat-value" style="color: var(--color-error);">{{ total_unread }}</span>
+                </div>
+            </div>
+            <button onclick="syncVideos()" class="btn btn-primary" id="syncBtn">
+                <span class="btn-icon">🔄</span> Sincronizar Videos
+            </button>
+        </div>
+    </div>
+
+    <!-- Lista de Videos -->
+    <div class="videos-container">
+        {% if videos %}
+            <div class="videos-grid">
+                {% for video in videos %}
+                <div class="video-card" data-video-id="{{ video.video_id }}">
+                    <div class="video-thumbnail">
+                        <img src="{{ video.thumbnail_url }}" alt="{{ video.title }}">
+                        <div class="video-stats-overlay">
+                            <span class="stat-overlay">👁️ {{ video.view_count|default:0 }}</span>
+                            <span class="stat-overlay">💬 {{ video.comment_count|default:0 }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="video-content">
+                        <div class="video-header">
+                            <h3 class="video-title">
+                                <a href="{% url 'video_detail_yt' video.video_id %}">
+                                    {{ video.title }}
+                                </a>
+                            </h3>
+                            {% if video.unread_comments_count > 0 %}
+                            <span class="badge badge-unread">
+                                {{ video.unread_comments_count }} nuevo{{ video.unread_comments_count|pluralize }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="video-meta">
+                            <span class="meta-item">
+                                📺 {{ video.channel_title }}
+                            </span>
+                            <span class="meta-item">
+                                📅 {{ video.published_at|date:"d/m/Y" }}
+                            </span>
+                        </div>
+
+                        <div class="video-actions">
+                            <a href="{% url 'video_detail_yt' video.video_id %}" class="btn btn-secondary btn-sm">
+                                <span>👁️</span> Ver Comentarios
+                            </a>
+                            <a href="{{ video.url }}" target="_blank" class="btn btn-outline btn-sm">
+                                <span>🔗</span> Ver en YouTube
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">🎥</div>
+                <h3>No hay videos sincronizados</h3>
+                <p>Haz clic en "Sincronizar Videos" para obtener tus videos de YouTube</p>
+                <button onclick="syncVideos()" class="btn btn-primary">
+                    <span>🔄</span> Sincronizar Ahora
+                </button>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.videos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 2rem;
+    animation: fadeIn 0.8s ease;
+}
+
+.video-card {
+    background: var(--color-blanco);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 2px solid transparent;
+}
+
+.video-card:hover {
+    box-shadow: var(--shadow-xl);
+    transform: translateY(-8px);
+    border-color: var(--color-azul-pastel);
+}
+
+.video-thumbnail {
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%; /* 16:9 aspect ratio */
+    overflow: hidden;
+}
+
+.video-thumbnail img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.video-card:hover .video-thumbnail img {
+    transform: scale(1.05);
+}
+
+.video-stats-overlay {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.stat-overlay {
+    background: rgba(0, 0, 0, 0.8);
+    color: var(--color-blanco);
+    padding: 0.375rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+}
+
+.video-content {
+    padding: 1.5rem;
+}
+
+.video-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.video-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    line-height: 1.4;
+    flex: 1;
+}
+
+.video-title a {
+    color: var(--color-azul-oscuro);
+    transition: all 0.3s ease;
+}
+
+.video-title a:hover {
+    color: var(--color-verde-principal);
+}
+
+.video-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--color-gris-claro);
+}
+
+.video-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+</style>
+
+<script>
+function syncVideos() {
+    const btn = document.getElementById('syncBtn');
+    const originalText = showLoading(btn);
+
+    fetch('{% url "sync_videos_yt" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage(`✅ Se sincronizaron ${data.synced_count} videos nuevos`, 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showMessage('❌ Error al sincronizar videos: ' + data.error, 'error');
+            hideLoading(btn);
+        }
+    })
+    .catch(error => {
+        showMessage('❌ Error de conexión', 'error');
+        console.error('Error:', error);
+        hideLoading(btn);
+    });
+}
+</script>
+{% endblock %}
