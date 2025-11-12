@@ -13,7 +13,7 @@ Aplicación web desarrollada en Django que permite a community managers gestiona
 
 ### 1. Clonar el repositorio
 ```bash
-git clone https://github.com/tu-usuario/automatic_cm.git
+git clone https://github.com/DorianAlejandroGuisaoO/AUTOMATIC_CM.git
 cd automatic_cm
 ```
 
