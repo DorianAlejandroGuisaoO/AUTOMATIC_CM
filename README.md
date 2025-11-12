@@ -2,10 +2,8 @@
 
 Aplicación web desarrollada en Django que permite a community managers gestionar comentarios de Reddit y YouTube, generando respuestas automáticas con IA y publicándolas directamente en las plataformas.
 
-
-
 - Python 3.8 o superior
-- Ollama instalado (para IA local)
+- Ollama instalado (Abajo se explica el paso a paso para la instalación y verirficación)
   
 
 
@@ -33,7 +31,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. Instalar Ollama y modelo de IA
+### 4. Instalar Ollama y modelo de IA (Importante para que funcione la IA)
 ```bash
 # Instalar Ollama (https://ollama.com)
 #https://ollama.com/download, Una vez se descargue el .exe, ejecutar el .exe como admin
@@ -45,17 +43,47 @@ ollama serve
 # Es importante que para poder usar "ollama" en la consola debe estar en el PATH del OS, al abirir el .exe como admin esto deberia hacerse solo, si no, reiniciar el PC o agregarlo al PATH manualmente,
 ```
 
-### 8. Realizar migraciones
+### 5. Realizar migraciones
 ```bash
 python manage.py makemigrations
 python manage.py migrate
 ```
 
-### 9. Crear superusuario
+### 6. Crear superusuario
 ```bash
 python manage.py createsuperuser
 ```
-### Correr el server
+### 7. Correr el server
+
+```bash
+python manage.py runserver
+```
+
+### 8. Ir a la vista de admin y logearse
+
+```bash
+python manage.py runserver
+```
+
+
+### 9. Ir a la vista de admin y logearse con el superuser
+
+```bash
+http://127.0.0.1:8000/admin/
+```
+
+
+### 10. Ir a la vista de reddit o YT
+
+```bash
+http://127.0.0.1:8000/dashboard/reddit/
+
+o
+
+http://127.0.0.1:8000/dashboard/youtube/
+```
+
+### 10. Sincronizar post y comentarios, y si se quiere crear posts (de reddit) o responder a los comentarios de un post con la IA (reddit y YT)
 
 
 ## 🛠️ Tecnologías
