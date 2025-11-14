@@ -14,6 +14,7 @@ urlpatterns = [
     # Posts y comentarios
     path('reddit/post/<str:post_id>/', views.post_detail, name='post_detail'),
     path('reddit/comment/<str:comment_id>/', views.comment_detail, name='comment_detail'),
+    path('reddit/comment/<str:comment_id>/delete/', views.delete_comment, name='delete_comment'),
     
     # Crear, editar y eliminar posts
     path('reddit/create-post/', views.create_post_view, name='create_post'),
@@ -39,6 +40,7 @@ urlpatterns = [
     # Videos y comentarios
     path('youtube/video/<str:video_id>/', views_youtube.video_detail_yt, name='video_detail_yt'),
     path('youtube/comment/<str:comment_id>/', views_youtube.comment_detail_yt, name='comment_detail_yt'),
+    path('youtube/comment/<str:comment_id>/delete/', views_youtube.delete_comment_yt, name='delete_comment_yt'),
     
     # Generación y gestión de respuestas
     path('youtube/comment/<str:comment_id>/generate/', views_youtube.generate_response_yt, name='generate_response_yt'),

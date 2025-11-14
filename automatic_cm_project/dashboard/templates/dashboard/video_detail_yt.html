@@ -76,6 +76,9 @@
                                 <span>Generar Respuesta</span>
                             {% endif %}
                         </a>
+                        <button onclick="deleteComment('{{ comment.comment_id }}')" class="btn btn-danger btn-sm">
+                            <span>Eliminar</span>
+                        </button>
                     </div>
                 </div>
                 {% endfor %}
@@ -177,6 +180,35 @@ function syncComments() {
         showMessage('❌ Error de conexión', 'error');
         console.error('Error:', error);
         hideLoading(btn);
+    });
+}
+
+function deleteComment(commentId) {
+    if (!confirm('¿Estás seguro de eliminar este comentario? Esta acción no se puede deshacer.')) {
+        return;
+    }
+
+    fetch(`/dashboard/youtube/comment/${commentId}/delete/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage('✅ Comentario eliminado exitosamente', 'success');
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            showMessage('❌ ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        showMessage('❌ Error de conexión', 'error');
+        console.error('Error:', error);
     });
 }
 </script>

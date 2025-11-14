@@ -143,6 +143,9 @@
                         <a href="{{ post.permalink }}" target="_blank" class="btn btn-outline btn-sm">
                             Ver en Reddit
                         </a>
+                        <button onclick="deleteCommentFromManager('{{ post.post_id }}', null)" class="btn btn-danger btn-sm" title="Eliminar comentarios del post">
+                            Eliminar Comentarios
+                        </button>
                     </div>
                 </div>
                 {% endfor %}
@@ -293,6 +296,40 @@ function syncPosts() {
         console.error('Error:', error);
         hideLoading(btn);
     });
+}
+
+function deleteCommentFromManager(postId, commentId) {
+    if (!commentId) {
+        // Mostrar todos los comentarios del post para seleccionar
+        window.location.href = `/dashboard/reddit/post/${postId}/`;
+    } else {
+        if (!confirm('¿Estás seguro de eliminar este comentario? Esta acción no se puede deshacer.')) {
+            return;
+        }
+
+        fetch(`/dashboard/reddit/comment/${commentId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage('✅ Comentario eliminado exitosamente', 'success');
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            } else {
+                showMessage('❌ ' + data.error, 'error');
+            }
+        })
+        .catch(error => {
+            showMessage('❌ Error de conexión', 'error');
+            console.error('Error:', error);
+        });
+    }
 }
 </script>
 {% endblock %}

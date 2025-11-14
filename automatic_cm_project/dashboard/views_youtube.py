@@ -207,6 +207,49 @@ def comment_detail_yt(request, comment_id):
     return render(request, 'dashboard/comment_detail_yt.html', context)
 
 @login_required
+def delete_comment_yt(request, comment_id):
+    """Elimina un comentario de YouTube y la base de datos"""
+    if request.method == 'POST':
+        try:
+            comment = get_object_or_404(YouTubeComment, comment_id=comment_id)
+            
+            # Verificar permisos - solo puede eliminar comentarios de sus propios videos
+            if comment.video.user != request.user:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'No autorizado'
+                }, status=403)
+            
+            # Eliminar de YouTube
+            bot = YouTubeBot()
+            success = bot.delete_comment(comment_id)
+            
+            if success:
+                # Eliminar de la base de datos
+                video_id = comment.video.video_id
+                comment.delete()
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Comentario eliminado exitosamente',
+                    'video_id': video_id
+                })
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Error al eliminar el comentario de YouTube'
+                }, status=500)
+                
+        except Exception as e:
+            logger.error(f"Error al eliminar comentario: {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+    
+    return JsonResponse({'success': False}, status=400)
+
+@login_required
 def generate_response_yt(request, comment_id):
     """Genera una respuesta con IA para un comentario de YouTube"""
     if request.method == 'POST':
