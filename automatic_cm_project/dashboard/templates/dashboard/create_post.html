@@ -12,12 +12,12 @@
     <!-- Header -->
     <div class="view-header">
         <div>
-            <h2 class="view-title">📝 Crear Nuevo Post</h2>
+            <h2 class="view-title">Crear Nuevo Post</h2>
             <p class="view-subtitle">Publica directamente en r/ACM_Magneto</p>
         </div>
         <div class="header-actions">
             <a href="{% url 'generate_job_post' %}" class="btn btn-secondary">
-                <span>✨</span> Generar con IA
+                <span>Generar con IA</span>
             </a>
         </div>
     </div>
@@ -85,10 +85,10 @@
 
             <div class="form-actions">
                 <button type="button" onclick="previewPost()" class="btn btn-outline">
-                    <span>👁️</span> Vista Previa
+                    <span>Vista Previa</span>
                 </button>
                 <button type="submit" class="btn btn-primary" id="submitBtn">
-                    <span>🚀</span> Publicar Post
+                    <span>Publicar Post</span>
                 </button>
             </div>
         </form>
@@ -96,15 +96,15 @@
 
     <!-- Preview Section -->
     <div id="previewSection" class="preview-section" style="display: none;">
-        <h3 class="section-title">👁️ Vista Previa</h3>
+        <h3 class="section-title">Vista Previa</h3>
         <div class="preview-card">
             <h4 id="previewTitle" class="preview-title"></h4>
             <div id="previewImage" class="preview-image"></div>
             <div id="previewContent" class="preview-content"></div>
             <div class="preview-meta">
-                <span class="meta-item">📅 Ahora</span>
-                <span class="meta-item">👤 {{ user.username }}</span>
-                <span class="meta-item">📍 r/ACM_Magneto</span>
+                <span class="meta-item">Ahora</span>
+                <span class="meta-item">{{ user.username }}</span>
+                <span class="meta-item">r/ACM_Magneto</span>
             </div>
         </div>
     </div>

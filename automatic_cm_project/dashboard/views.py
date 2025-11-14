@@ -16,12 +16,42 @@ logger = logging.getLogger(__name__)
 @login_required
 def reddit_manager(request):
     """Vista principal - Lista de posts del subreddit"""
+    from datetime import timedelta
+    
     posts = RedditPost.objects.filter(user=request.user, is_active=True)
+    
+    # Calcular métricas
+    total_posts = posts.count()
+    total_comments = sum(post.comments.count() for post in posts)
+    total_unread = sum(post.unread_comments_count for post in posts)
+    
+    # Respuestas pendientes y publicadas
+    pending_responses = Response.objects.filter(
+        comment__post__user=request.user,
+        status='pending'
+    ).count()
+    
+    published_responses = Response.objects.filter(
+        comment__post__user=request.user,
+        status='published'
+    ).count()
+    
+    # Posts de los últimos 7 días
+    seven_days_ago = timezone.now() - timedelta(days=7)
+    posts_7d = posts.filter(created_at__gte=seven_days_ago).count()
+    
+    # Promedio de comentarios por post
+    avg_comments = total_comments / total_posts if total_posts > 0 else 0
     
     context = {
         'posts': posts,
-        'total_posts': posts.count(),
-        'total_unread': sum(post.unread_comments_count for post in posts)
+        'total_posts': total_posts,
+        'total_comments': total_comments,
+        'total_unread': total_unread,
+        'pending_responses': pending_responses,
+        'published_responses': published_responses,
+        'posts_7d': posts_7d,
+        'avg_comments': round(avg_comments, 2)
     }
     
     return render(request, 'dashboard/reddit_manager.html', context)

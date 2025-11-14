@@ -14,7 +14,7 @@
     <!-- Header -->
     <div class="view-header">
         <div>
-            <h2 class="view-title">✨ Generar Post de Empleo con IA</h2>
+            <h2 class="view-title">Generar Post de Empleo con IA</h2>
             <p class="view-subtitle">Completa los datos y deja que la IA genere un post atractivo</p>
         </div>
     </div>
@@ -27,7 +27,7 @@
             <div class="form-row">
                 <div class="form-section">
                     <label class="form-label">
-                        <span class="label-icon">💼</span> {{ form.job_title.label }}
+                        {{ form.job_title.label }}
                     </label>
                     {{ form.job_title }}
                     {% if form.job_title.errors %}
@@ -37,7 +37,7 @@
 
                 <div class="form-section">
                     <label class="form-label">
-                        <span class="label-icon">🏢</span> {{ form.company_name.label }}
+                        {{ form.company_name.label }}
                     </label>
                     {{ form.company_name }}
                     {% if form.company_name.errors %}
@@ -49,7 +49,7 @@
             <div class="form-row">
                 <div class="form-section">
                     <label class="form-label">
-                        <span class="label-icon">⏰</span> {{ form.job_type.label }}
+                        {{ form.job_type.label }}
                     </label>
                     {{ form.job_type }}
                     {% if form.job_type.errors %}
@@ -59,7 +59,7 @@
 
                 <div class="form-section">
                     <label class="form-label">
-                        <span class="label-icon">📍</span> {{ form.location.label }}
+                        {{ form.location.label }}
                     </label>
                     {{ form.location }}
                     {% if form.location.errors %}
@@ -70,7 +70,7 @@
 
             <div class="form-section">
                 <label class="form-label">
-                    <span class="label-icon">💰</span> {{ form.salary_range.label }}
+                    {{ form.salary_range.label }}
                 </label>
                 {{ form.salary_range }}
                 {% if form.salary_range.errors %}
@@ -80,7 +80,7 @@
 
             <div class="form-section">
                 <label class="form-label">
-                    <span class="label-icon">📋</span> {{ form.requirements.label }}
+                    {{ form.requirements.label }}
                 </label>
                 {{ form.requirements }}
                 {% if form.requirements.errors %}
@@ -91,7 +91,7 @@
 
             <div class="form-section">
                 <label class="form-label">
-                    <span class="label-icon">✨</span> {{ form.benefits.label }}
+                    {{ form.benefits.label }}
                 </label>
                 {{ form.benefits }}
                 {% if form.benefits.errors %}
@@ -102,10 +102,10 @@
 
             <div class="form-actions">
                 <a href="{% url 'create_post' %}" class="btn btn-outline">
-                    <span>←</span> Volver
+                    <span>Volver</span>
                 </a>
                 <button type="button" onclick="generatePost()" class="btn btn-primary" id="generateBtn">
-                    <span>✨</span> Generar Post con IA
+                    <span>Generar Post con IA</span>
                 </button>
             </div>
         </form>
@@ -113,7 +113,7 @@
 
     <!-- Generated Content -->
     <div id="generatedSection" class="generated-section" style="display: none;">
-        <h3 class="section-title">🎉 Post Generado</h3>
+        <h3 class="section-title">Post Generado</h3>
         
         <div class="generated-card">
             <div class="form-section">
@@ -128,10 +128,10 @@
 
             <div class="form-actions">
                 <button type="button" onclick="generatePost()" class="btn btn-outline">
-                    <span>🔄</span> Regenerar
+                    <span>Regenerar</span>
                 </button>
                 <button type="button" onclick="useGenerated()" class="btn btn-primary">
-                    <span>✅</span> Usar este Post
+                    <span>Usar este Post</span>
                 </button>
             </div>
         </div>

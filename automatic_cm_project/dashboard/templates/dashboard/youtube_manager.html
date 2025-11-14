@@ -7,23 +7,49 @@
     <!-- Header de la vista -->
     <div class="view-header">
         <div>
-            <h2 class="view-title">🎥 Gestor de YouTube</h2>
+            <h2 class="view-title">Gestor de YouTube</h2>
             <p class="view-subtitle">Gestiona comentarios de tus videos</p>
         </div>
         <div class="header-actions">
-            <div class="stats">
-                <div class="stat-item">
-                    <span class="stat-label">Videos</span>
-                    <span class="stat-value">{{ total_videos }}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Pendientes</span>
-                    <span class="stat-value" style="color: var(--color-error);">{{ total_unread }}</span>
-                </div>
+            <div style="display: flex; gap: 1rem;">
+                <button onclick="syncVideos()" class="btn btn-primary" id="syncBtn">
+                    <span class="btn-icon">🔄</span> Sincronizar
+                </button>
             </div>
-            <button onclick="syncVideos()" class="btn btn-primary" id="syncBtn">
-                <span class="btn-icon">🔄</span> Sincronizar Videos
-            </button>
+        </div>
+    </div>
+
+    <!-- Métricas -->
+    <div class="metrics-section">
+        <div class="stats">
+            <div class="stat-item">
+                <span class="stat-label">Videos</span>
+                <span class="stat-value">{{ total_videos }}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Comentarios</span>
+                <span class="stat-value">{{ total_comments }}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Pendientes</span>
+                <span class="stat-value" style="color: var(--color-error);">{{ total_unread }}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Respuestas Pendientes</span>
+                <span class="stat-value" style="color: var(--color-azul-acento);">{{ pending_responses }}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Respuestas Publicadas</span>
+                <span class="stat-value" style="color: var(--color-verde-principal);">{{ published_responses }}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Videos (7D)</span>
+                <span class="stat-value">{{ videos_7d }}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Promedio C/Video</span>
+                <span class="stat-value">{{ avg_comments }}</span>
+            </div>
         </div>
     </div>
 
@@ -36,8 +62,8 @@
                     <div class="video-thumbnail">
                         <img src="{{ video.thumbnail_url }}" alt="{{ video.title }}">
                         <div class="video-stats-overlay">
-                            <span class="stat-overlay">👁️ {{ video.view_count|default:0 }}</span>
-                            <span class="stat-overlay">💬 {{ video.comment_count|default:0 }}</span>
+                            <span class="stat-overlay">{{ video.view_count|default:0 }} vistas</span>
+                            <span class="stat-overlay">{{ video.comment_count|default:0 }} comentarios</span>
                         </div>
                     </div>
                     
@@ -57,19 +83,19 @@
                         
                         <div class="video-meta">
                             <span class="meta-item">
-                                📺 {{ video.channel_title }}
+                                {{ video.channel_title }}
                             </span>
                             <span class="meta-item">
-                                📅 {{ video.published_at|date:"d/m/Y" }}
+                                {{ video.published_at|date:"d/m/Y" }}
                             </span>
                         </div>
 
                         <div class="video-actions">
                             <a href="{% url 'video_detail_yt' video.video_id %}" class="btn btn-secondary btn-sm">
-                                <span>👁️</span> Ver Comentarios
+                                Ver Comentarios
                             </a>
                             <a href="{{ video.url }}" target="_blank" class="btn btn-outline btn-sm">
-                                <span>🔗</span> Ver en YouTube
+                                Ver en YouTube
                             </a>
                         </div>
                     </div>

@@ -19,16 +19,16 @@
                 <h2 class="video-title-large">{{ video.title }}</h2>
                 <div class="video-meta-large">
                     <span class="meta-item">
-                        📺 {{ video.channel_title }}
+                        {{ video.channel_title }}
                     </span>
                     <span class="meta-item">
-                        📅 {{ video.published_at|date:"d/m/Y H:i" }}
+                        {{ video.published_at|date:"d/m/Y H:i" }}
                     </span>
                     <span class="meta-item">
-                        👁️ {{ video.view_count|default:0 }} vistas
+                        {{ video.view_count|default:0 }} vistas
                     </span>
                     <span class="meta-item">
-                        💬 {{ comments_count }} comentario{{ comments_count|pluralize }}
+                        {{ comments_count }} comentario{{ comments_count|pluralize }}
                     </span>
                 </div>
                 <div class="video-actions-large">
@@ -36,7 +36,7 @@
                         <span>🔄</span> Sincronizar Comentarios
                     </button>
                     <a href="{{ video.url }}" target="_blank" class="btn btn-outline">
-                        <span>🔗</span> Ver en YouTube
+                        <span>Ver en YouTube</span>
                     </a>
                 </div>
             </div>
@@ -71,9 +71,9 @@
                     <div class="comment-actions">
                         <a href="{% url 'comment_detail_yt' comment.comment_id %}" class="btn btn-secondary btn-sm">
                             {% if comment.youtube_response %}
-                                <span>👁️</span> Ver Respuesta
+                                <span>Ver Respuesta</span>
                             {% else %}
-                                <span>✨</span> Generar Respuesta
+                                <span>Generar Respuesta</span>
                             {% endif %}
                         </a>
                     </div>

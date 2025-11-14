@@ -6,28 +6,28 @@
 <div class="comment-detail-view">
     <!-- Breadcrumb -->
     <nav class="breadcrumb">
-        <a href="{% url 'reddit_manager' %}">📱 Posts</a> / 
+        <a href="{% url 'reddit_manager' %}">Posts</a> / 
         <a href="{% url 'post_detail' comment.post.post_id %}">{{ comment.post.title|truncatewords:5 }}</a> /
-        <span>💬 Comentario</span>
+        <span>Comentario</span>
     </nav>
 
     <!-- Comment Card -->
     <div class="comment-display-card">
         <div class="card-header">
-            <h3>💬 Comentario Original</h3>
+            <h3>Comentario Original</h3>
             <span class="status-badge {{ comment.status_badge.class }}">
                 {{ comment.status_badge.text }}
             </span>
         </div>
         <div class="comment-info">
             <span class="info-item">
-                <strong>👤 {{ comment.author }}</strong>
+                <strong>{{ comment.author }}</strong>
             </span>
             <span class="info-item">
-                📅 {{ comment.created_at|date:"d/m/Y H:i" }}
+                {{ comment.created_at|date:"d/m/Y H:i" }}
             </span>
             <a href="{{ comment.permalink }}" target="_blank" class="info-item link">
-                🔗 Ver en Reddit
+                Ver en Reddit
             </a>
         </div>
         <div class="comment-text">
@@ -38,7 +38,7 @@
     <!-- Response Generation -->
     {% if not response or response.status == 'rejected' %}
     <div class="generation-section">
-        <h3 class="section-title">✨ Generar Respuesta con IA</h3>
+        <h3 class="section-title">Generar Respuesta con IA</h3>
         <p class="section-subtitle">Elige el tono de la respuesta que deseas generar:</p>
         
         <div class="tone-buttons">
@@ -65,8 +65,8 @@
     {% if response and response.status != 'rejected' %}
     <div class="response-section">
         <div class="section-header">
-            <h3 class="section-title">🤖 Respuesta Generada</h3>
-            <span class="tone-badge">✨ Tono: {{ response.get_tone_display }}</span>
+            <h3 class="section-title">Respuesta Generada</h3>
+            <span class="tone-badge">Tono: {{ response.get_tone_display }}</span>
         </div>
 
         <div class="response-card">
@@ -79,23 +79,23 @@
             <div class="response-actions">
                 {% if response.status == 'pending' %}
                     <button onclick="updateResponse()" class="btn btn-secondary" id="updateBtn">
-                        <span>✏️</span> Guardar Edición
+                        <span>Guardar Edición</span>
                     </button>
                     <button onclick="regenerateResponse()" class="btn btn-outline">
-                        <span>🔄</span> Regenerar
+                        <span>Regenerar</span>
                     </button>
                     <button onclick="publishResponse()" class="btn btn-primary" id="publishBtn">
-                        <span>✅</span> Publicar en Reddit
+                        <span>Publicar en Reddit</span>
                     </button>
                     <button onclick="rejectResponse()" class="btn btn-danger">
-                        <span>❌</span> Descartar
+                        <span>Descartar</span>
                     </button>
                 {% elif response.status == 'published' %}
                     <div class="published-info">
                         <span class="success-icon">✅</span>
                         <span>Publicado el {{ response.published_at|date:"d/m/Y H:i" }}</span>
                         <a href="{{ comment.permalink }}" target="_blank" class="btn btn-outline btn-sm">
-                            <span>🔗</span> Ver en Reddit
+                            <span>Ver en Reddit</span>
                         </a>
                     </div>
                 {% endif %}

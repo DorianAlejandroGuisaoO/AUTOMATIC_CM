@@ -13,12 +13,42 @@ logger = logging.getLogger(__name__)
 @login_required
 def youtube_manager(request):
     """Vista principal - Lista de videos de YouTube"""
+    from datetime import timedelta
+    
     videos = YouTubeVideo.objects.filter(user=request.user, is_active=True)
+    
+    # Calcular métricas
+    total_videos = videos.count()
+    total_comments = sum(video.youtube_comments.filter(is_reply=False).count() for video in videos)
+    total_unread = sum(video.unread_comments_count for video in videos)
+    
+    # Respuestas pendientes y publicadas
+    pending_responses = YouTubeResponse.objects.filter(
+        comment__video__user=request.user,
+        status='pending'
+    ).count()
+    
+    published_responses = YouTubeResponse.objects.filter(
+        comment__video__user=request.user,
+        status='published'
+    ).count()
+    
+    # Videos de los últimos 7 días
+    seven_days_ago = timezone.now() - timedelta(days=7)
+    videos_7d = videos.filter(published_at__gte=seven_days_ago).count()
+    
+    # Promedio de comentarios por video
+    avg_comments = total_comments / total_videos if total_videos > 0 else 0
     
     context = {
         'videos': videos,
-        'total_videos': videos.count(),
-        'total_unread': sum(video.unread_comments_count for video in videos)
+        'total_videos': total_videos,
+        'total_comments': total_comments,
+        'total_unread': total_unread,
+        'pending_responses': pending_responses,
+        'published_responses': published_responses,
+        'videos_7d': videos_7d,
+        'avg_comments': round(avg_comments, 2)
     }
     
     return render(request, 'dashboard/youtube_manager.html', context)

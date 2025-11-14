@@ -14,13 +14,13 @@
         <h2 class="post-title" style="margin-bottom: 1rem;">{{ post.title }}</h2>
         <div class="post-meta" style="border: none; padding: 0; margin-bottom: 1.5rem;">
             <span class="meta-item">
-                👤 {{ post.author }}
+                {{ post.author }}
             </span>
             <span class="meta-item">
-                📅 {{ post.created_at|date:"d/m/Y H:i" }}
+                {{ post.created_at|date:"d/m/Y H:i" }}
             </span>
             <span class="meta-item">
-                💬 {{ comments_count }} comentario{{ comments_count|pluralize }}
+                {{ comments_count }} comentario{{ comments_count|pluralize }}
             </span>
         </div>
         <div class="post-actions">
@@ -28,18 +28,18 @@
                 <span>🔄</span> Sincronizar Comentarios
             </button>
             <a href="{{ post.permalink }}" target="_blank" class="btn btn-outline">
-                <span>🔗</span> Ver en Reddit
+                <span>Ver en Reddit</span>
             </a>
             
             {% if post.can_edit %}
             <a href="{% url 'edit_post' post.post_id %}" class="btn btn-secondary">
-                <span>✏️</span> Editar Post
+                <span>Editar Post</span>
             </a>
             {% endif %}
             
             {% if post.can_delete %}
             <button onclick="deletePost('{{ post.post_id }}')" class="btn btn-danger">
-                <span>🗑️</span> Eliminar Post
+                <span>Eliminar Post</span>
             </button>
             {% endif %}
         </div>
@@ -70,13 +70,13 @@
                     <div class="comment-actions">
                         <a href="{% url 'comment_detail' comment.comment_id %}" class="btn btn-secondary btn-sm">
                             {% if comment.response %}
-                                <span>👁️</span> Ver Respuesta
+                                <span>Ver Respuesta</span>
                             {% else %}
-                                <span>✨</span> Generar Respuesta
+                                <span>Generar Respuesta</span>
                             {% endif %}
                         </a>
                         <a href="{{ comment.permalink }}" target="_blank" class="btn btn-outline btn-sm">
-                            <span>🔗</span> Ver en Reddit
+                            <span>Ver en Reddit</span>
                         </a>
                     </div>
                 </div>

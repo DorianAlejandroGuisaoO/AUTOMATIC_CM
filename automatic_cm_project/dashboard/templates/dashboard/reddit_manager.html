@@ -7,30 +7,54 @@
     <!-- Header de la vista -->
     <div class="view-header">
         <div>
-            <h2 class="view-title">📱 Gestor de Reddit</h2>
+            <h2 class="view-title">Gestor de Reddit</h2>
             <p class="view-subtitle">Subreddit: r/ACM_Magneto</p>
         </div>
         <div class="header-actions">
-            <div class="stats">
-                <div class="stat-item">
-                    <span class="stat-label">Posts</span>
-                    <span class="stat-value">{{ total_posts }}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Pendientes</span>
-                    <span class="stat-value" style="color: var(--color-error);">{{ total_unread }}</span>
-                </div>
+            <div style="display: flex; gap: 1rem;">
+                <a href="{% url 'create_post' %}" class="btn btn-secondary">
+                    Crear Post
+                </a>
+                <button onclick="syncPosts()" class="btn btn-primary" id="syncBtn">
+                    <span class="btn-icon">🔄</span> Sincronizar
+                </button>
             </div>
-            <a href="{% url 'create_post' %}" class="btn btn-secondary">
-                <span>📝</span> Crear Post
-            </a>
-            <button onclick="syncPosts()" class="btn btn-primary" id="syncBtn">
-                <span class="btn-icon">🔄</span> Sincronizar Posts
-            </button>
         </div>
     </div>
 
-    
+    <!-- Métricas -->
+    <div class="metrics-section">
+        <div class="stats">
+            <div class="stat-item">
+                <span class="stat-label">Posts</span>
+                <span class="stat-value">{{ total_posts }}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Comentarios</span>
+                <span class="stat-value">{{ total_comments }}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Pendientes</span>
+                <span class="stat-value" style="color: var(--color-error);">{{ total_unread }}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Respuestas Pendientes</span>
+                <span class="stat-value" style="color: var(--color-azul-acento);">{{ pending_responses }}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Respuestas Publicadas</span>
+                <span class="stat-value" style="color: var(--color-verde-principal);">{{ published_responses }}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Posts (7D)</span>
+                <span class="stat-value">{{ posts_7d }}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Promedio C/Post</span>
+                <span class="stat-value">{{ avg_comments }}</span>
+            </div>
+        </div>
+    </div>
 
     <!-- Lista de Posts -->
     <div class="posts-container">
@@ -53,22 +77,22 @@
                     
                     <div class="post-meta">
                         <span class="meta-item">
-                            👤 {{ post.author }}
+                            {{ post.author }}
                         </span>
                         <span class="meta-item">
-                            📅 {{ post.created_at|date:"d/m/Y H:i" }}
+                            {{ post.created_at|date:"d/m/Y H:i" }}
                         </span>
                         <span class="meta-item">
-                            💬 {{ post.comments.count }} comentario{{ post.comments.count|pluralize }}
+                            {{ post.comments.count }} comentario{{ post.comments.count|pluralize }}
                         </span>
                     </div>
 
                     <div class="post-actions">
                         <a href="{% url 'post_detail' post.post_id %}" class="btn btn-secondary btn-sm">
-                            <span>👁️</span> Ver Comentarios
+                            Ver Comentarios
                         </a>
                         <a href="{{ post.permalink }}" target="_blank" class="btn btn-outline btn-sm">
-                            <span>🔗</span> Ver en Reddit
+                            Ver en Reddit
                         </a>
                     </div>
                 </div>
