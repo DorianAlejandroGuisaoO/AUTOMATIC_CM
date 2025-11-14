@@ -14,6 +14,8 @@ logger = logging.getLogger(__name__)
 def youtube_manager(request):
     """Vista principal - Lista de videos de YouTube"""
     from datetime import timedelta
+    from django.db.models import Count
+    import json
     
     videos = YouTubeVideo.objects.filter(user=request.user, is_active=True)
     
@@ -40,6 +42,29 @@ def youtube_manager(request):
     # Promedio de comentarios por video
     avg_comments = total_comments / total_videos if total_videos > 0 else 0
     
+    # === DATOS PARA GRÁFICAS ===
+    # Actividad semanal (últimas 4 semanas)
+    activity_data = []
+    for i in range(3, -1, -1):
+        week_start = timezone.now() - timedelta(days=7*i + 7)
+        week_end = timezone.now() - timedelta(days=7*i)
+        week_videos = videos.filter(published_at__gte=week_start, published_at__lt=week_end).count()
+        activity_data.append({
+            'week': f'Semana {4-i}',
+            'videos': week_videos
+        })
+    
+    # Engagement por video (top 5 videos con más comentarios)
+    top_videos = videos.annotate(comment_count=Count('youtube_comments')).order_by('-comment_count')[:5]
+    engagement_data = [{
+        'title': video.title[:30] + '...' if len(video.title) > 30 else video.title,
+        'comments': video.youtube_comments.filter(is_reply=False).count()
+    } for video in top_videos]
+    
+    # Tasa de respuesta
+    videos_with_responses = videos.filter(youtube_comments__youtube_response__isnull=False).distinct().count()
+    response_rate = (videos_with_responses / total_videos * 100) if total_videos > 0 else 0
+    
     context = {
         'videos': videos,
         'total_videos': total_videos,
@@ -48,7 +73,10 @@ def youtube_manager(request):
         'pending_responses': pending_responses,
         'published_responses': published_responses,
         'videos_7d': videos_7d,
-        'avg_comments': round(avg_comments, 2)
+        'avg_comments': round(avg_comments, 2),
+        'activity_data': json.dumps(activity_data),
+        'engagement_data': json.dumps(engagement_data),
+        'response_rate': round(response_rate, 1)
     }
     
     return render(request, 'dashboard/youtube_manager.html', context)

@@ -53,6 +53,55 @@
         </div>
     </div>
 
+    <!-- Sección de Gráficas -->
+    <div class="analytics-section">
+        <h3 class="analytics-title">Análisis y Estadísticas</h3>
+        
+        <div class="charts-grid">
+            <!-- Gráfica 1: Actividad Semanal -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h4>Actividad por Semana</h4>
+                    <p class="chart-subtitle">Videos publicados últimas 4 semanas</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="activityChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Gráfica 2: Top Videos por Engagement -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h4>Videos con Mayor Engagement</h4>
+                    <p class="chart-subtitle">Comentarios por video (Top 5)</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="engagementChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Gráfica 3: Tasa de Respuesta -->
+            <div class="chart-card chart-card-full">
+                <div class="chart-header">
+                    <h4>Tasa de Respuesta</h4>
+                    <p class="chart-subtitle">Porcentaje de videos con respuestas generadas</p>
+                </div>
+                <div class="response-rate-container">
+                    <div class="progress-ring">
+                        <svg width="200" height="200">
+                            <circle cx="100" cy="100" r="90" class="progress-ring-circle" 
+                                style="--value: {{ response_rate }}; --max: 100;"></circle>
+                        </svg>
+                        <div class="progress-text">
+                            <span class="progress-value">{{ response_rate }}%</span>
+                            <span class="progress-label">Respondidos</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Lista de Videos -->
     <div class="videos-container">
         {% if videos %}
@@ -114,6 +163,9 @@
         {% endif %}
     </div>
 </div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 .videos-grid {
@@ -221,6 +273,109 @@
 </style>
 
 <script>
+// Datos para las gráficas
+const activityData = {{ activity_data|safe }};
+const engagementData = {{ engagement_data|safe }};
+
+// Gráfica 1: Actividad Semanal (Línea)
+const activityCtx = document.getElementById('activityChart')?.getContext('2d');
+if (activityCtx) {
+    new Chart(activityCtx, {
+        type: 'line',
+        data: {
+            labels: activityData.map(d => d.week),
+            datasets: [{
+                label: 'Videos Publicados',
+                data: activityData.map(d => d.videos),
+                borderColor: 'var(--color-verde-principal)',
+                backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: 'var(--color-verde-principal)',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    labels: {
+                        font: { size: 12 },
+                        color: 'var(--text-secondary)',
+                        usePointStyle: true
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'var(--bg-secondary)' },
+                    ticks: { color: 'var(--text-secondary)' }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: 'var(--text-secondary)' }
+                }
+            }
+        }
+    });
+}
+
+// Gráfica 2: Engagement (Barras Horizontales)
+const engagementCtx = document.getElementById('engagementChart')?.getContext('2d');
+if (engagementCtx && engagementData.length > 0) {
+    new Chart(engagementCtx, {
+        type: 'bar',
+        data: {
+            labels: engagementData.map(d => d.title),
+            datasets: [{
+                label: 'Comentarios',
+                data: engagementData.map(d => d.comments),
+                backgroundColor: [
+                    'var(--color-azul-acento)',
+                    'var(--color-verde-principal)',
+                    'var(--color-naranja)',
+                    'var(--color-azul-oscuro)',
+                    'var(--color-gris-claro)'
+                ],
+                borderRadius: 6,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    labels: {
+                        font: { size: 12 },
+                        color: 'var(--text-secondary)'
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    grid: { color: 'var(--bg-secondary)' },
+                    ticks: { color: 'var(--text-secondary)' }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: { color: 'var(--text-secondary)' }
+                }
+            }
+        }
+    });
+}
+
 function syncVideos() {
     const btn = document.getElementById('syncBtn');
     const originalText = showLoading(btn);

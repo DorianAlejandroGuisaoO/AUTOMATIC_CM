@@ -17,6 +17,8 @@ logger = logging.getLogger(__name__)
 def reddit_manager(request):
     """Vista principal - Lista de posts del subreddit"""
     from datetime import timedelta
+    from django.db.models import Count
+    import json
     
     posts = RedditPost.objects.filter(user=request.user, is_active=True)
     
@@ -43,6 +45,29 @@ def reddit_manager(request):
     # Promedio de comentarios por post
     avg_comments = total_comments / total_posts if total_posts > 0 else 0
     
+    # === DATOS PARA GRÁFICAS ===
+    # Actividad semanal (últimas 4 semanas)
+    activity_data = []
+    for i in range(3, -1, -1):
+        week_start = timezone.now() - timedelta(days=7*i + 7)
+        week_end = timezone.now() - timedelta(days=7*i)
+        week_posts = posts.filter(created_at__gte=week_start, created_at__lt=week_end).count()
+        activity_data.append({
+            'week': f'Semana {4-i}',
+            'posts': week_posts
+        })
+    
+    # Engagement por post (top 5 posts con más comentarios)
+    top_posts = posts.annotate(comment_count=Count('comments')).order_by('-comment_count')[:5]
+    engagement_data = [{
+        'title': post.title[:30] + '...' if len(post.title) > 30 else post.title,
+        'comments': post.comments.count()
+    } for post in top_posts]
+    
+    # Tasa de respuesta
+    posts_with_responses = posts.filter(comments__response__isnull=False).distinct().count()
+    response_rate = (posts_with_responses / total_posts * 100) if total_posts > 0 else 0
+    
     context = {
         'posts': posts,
         'total_posts': total_posts,
@@ -51,7 +76,10 @@ def reddit_manager(request):
         'pending_responses': pending_responses,
         'published_responses': published_responses,
         'posts_7d': posts_7d,
-        'avg_comments': round(avg_comments, 2)
+        'avg_comments': round(avg_comments, 2),
+        'activity_data': json.dumps(activity_data),
+        'engagement_data': json.dumps(engagement_data),
+        'response_rate': round(response_rate, 1)
     }
     
     return render(request, 'dashboard/reddit_manager.html', context)
