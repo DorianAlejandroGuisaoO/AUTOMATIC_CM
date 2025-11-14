@@ -55,7 +55,7 @@ def youtube_manager(request):
         })
     
     # Engagement por video (top 5 videos con más comentarios)
-    top_videos = videos.annotate(comment_count=Count('youtube_comments')).order_by('-comment_count')[:5]
+    top_videos = videos.annotate(total_youtube_comments=Count('youtube_comments')).order_by('-total_youtube_comments')[:5]
     engagement_data = [{
         'title': video.title[:30] + '...' if len(video.title) > 30 else video.title,
         'comments': video.youtube_comments.filter(is_reply=False).count()

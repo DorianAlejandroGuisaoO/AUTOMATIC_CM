@@ -213,25 +213,41 @@ def delete_comment(request, comment_id):
                     'error': 'No autorizado'
                 }, status=403)
             
-            # Eliminar de Reddit
-            bot = RedditBot()
-            success = bot.delete_comment(comment_id)
+            post_id = comment.post.post_id
+            reddit_deleted = False
             
-            if success:
-                # Eliminar de la base de datos
-                post_id = comment.post.post_id
-                comment.delete()
-                
-                return JsonResponse({
-                    'success': True,
-                    'message': 'Comentario eliminado exitosamente',
-                    'post_id': post_id
-                })
-            else:
-                return JsonResponse({
-                    'success': False,
-                    'error': 'Error al eliminar el comentario de Reddit'
-                }, status=500)
+            # Intentar eliminar el comentario original de Reddit
+            try:
+                bot = RedditBot()
+                reddit_deleted = bot.delete_comment(comment_id)
+                if reddit_deleted:
+                    logger.info(f"Comentario {comment_id} eliminado de Reddit")
+            except Exception as e:
+                logger.warning(f"No se pudo eliminar comentario de Reddit: {str(e)}")
+            
+            # Eliminar la respuesta del bot si existe
+            try:
+                response = comment.response
+                if response and response.reddit_reply_id:
+                    try:
+                        bot = RedditBot()
+                        bot.delete_comment(response.reddit_reply_id)
+                        logger.info(f"Respuesta {response.reddit_reply_id} eliminada de Reddit")
+                    except Exception as e:
+                        logger.warning(f"No se pudo eliminar respuesta de Reddit: {str(e)}")
+                    finally:
+                        response.delete()
+            except Response.DoesNotExist:
+                pass
+            
+            # Eliminar el comentario de la base de datos
+            comment.delete()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Comentario eliminado exitosamente',
+                'post_id': post_id
+            })
                 
         except Exception as e:
             logger.error(f"Error al eliminar comentario: {str(e)}")

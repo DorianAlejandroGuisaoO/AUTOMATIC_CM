@@ -146,9 +146,6 @@
                             <a href="{{ video.url }}" target="_blank" class="btn btn-outline btn-sm">
                                 Ver en YouTube
                             </a>
-                            <button onclick="deleteCommentFromManager('{{ video.video_id }}', null)" class="btn btn-danger btn-sm" title="Eliminar comentarios del video">
-                                Eliminar Comentarios
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -405,40 +402,6 @@ function syncVideos() {
         console.error('Error:', error);
         hideLoading(btn);
     });
-}
-
-function deleteCommentFromManager(videoId, commentId) {
-    if (!commentId) {
-        // Mostrar todos los comentarios del video para seleccionar
-        window.location.href = `/dashboard/youtube/video/${videoId}/`;
-    } else {
-        if (!confirm('¿Estás seguro de eliminar este comentario? Esta acción no se puede deshacer.')) {
-            return;
-        }
-
-        fetch(`/dashboard/youtube/comment/${commentId}/delete/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}',
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showMessage('✅ Comentario eliminado exitosamente', 'success');
-                setTimeout(() => {
-                    location.reload();
-                }, 1500);
-            } else {
-                showMessage('❌ ' + data.error, 'error');
-            }
-        })
-        .catch(error => {
-            showMessage('❌ Error de conexión', 'error');
-            console.error('Error:', error);
-        });
-    }
 }
 </script>
 {% endblock %}

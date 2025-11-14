@@ -228,3 +228,33 @@ class RedditBot:
         except Exception as e:
             logger.error(f"Error al eliminar post: {str(e)}")
             return False
+
+    def delete_comment(self, comment_id):
+        """
+        Elimina/Remueve un comentario de Reddit
+        - Si eres el autor: lo ELIMINA permanentemente
+        - Si eres moderador: lo REMUEVE (oculta pero no elimina)
+        
+        Args:
+            comment_id (str): ID del comentario
+            
+        Returns:
+            bool: True si se eliminó/removió exitosamente
+        """
+        try:
+            comment = self.reddit.comment(id=comment_id)
+            
+            # Intentar eliminar si eres el autor
+            if str(comment.author) == settings.REDDIT_USERNAME:
+                comment.delete()
+                logger.info(f"Comentario {comment_id} eliminado exitosamente de Reddit (como autor)")
+                return True
+            else:
+                # Si no eres el autor, intentar remover como moderador
+                comment.mod.remove(spam=False)
+                logger.info(f"Comentario {comment_id} removido exitosamente de Reddit (como moderador)")
+                return True
+            
+        except Exception as e:
+            logger.error(f"No se pudo eliminar/remover comentario {comment_id} de Reddit: {str(e)}")
+            return False
